@@ -24,6 +24,23 @@ public abstract class PlayerUUIDMap {
     }
 
     /**
+     * Returns a player's name with correct capitalization if it is cached locally.
+     * Must not be a long-running operation.
+     *
+     * @param playerName The player's name, does not have to be capitalized correctly
+     * @return The inputted player's name with correct capitalization or null if it could not be found
+     */
+    public abstract String getCachedCorrectedPlayerName(String playerName);
+
+    /**
+     * Checks if the correctly capitalized version of a player's name is cached locally.
+     *
+     * @param playerName The String representation of a player's name, does not have to be capitalized correctly
+     * @return True if the player's name is cached
+     */
+    public abstract boolean isCorrectedPlayerNameCached(String playerName);
+
+    /**
      * Checks if a player's name is cached locally.
      *
      * @param playerUuid The String representation of a player's {@link UUID}, does not have to contain dashes
@@ -64,7 +81,6 @@ public abstract class PlayerUUIDMap {
         return getCachedPlayerName(getUuidFromString(playerUuid));
     }
 
-
     /**
      * Checks if a player's {@link UUID} is cached locally.
      *
@@ -98,35 +114,49 @@ public abstract class PlayerUUIDMap {
 
     /**
      * Gets a player's {@link UUID} and returns it using the supplied PlayerUUIDMapCallback
-     * Potentially a long-running operation. If so, it be carried out asynchronously.
+     * Potentially a long-running operation. If so, it should be carried out asynchronously.
      *
      * @param playerName A player's name, does NOT have to be capitalized correctly
-     * @return The String equivalent of the player's UUID (with the dashes) or null
+     * @param callback A callback which the results of this method will be passed to. {@code playerName}s passed to the callback must be properly capitalized or null
      */
     public abstract void getPlayerUuid(String playerName, PlayerUUIDMapCallback callback);
 
     /**
+     * Gets a player's name with corrected capitalization and returns it using the supplied PlayerUUIDMapCallback
+     * This method is actually just a wrapper around {@link #getPlayerUuid} by default, but depending on the implementation the callback may or may not include the player's {@link UUID}
+     *
+     * @param playerName A player's name, does NOT have to be capitalized correctly
+     * @param callback A callback which the results of this method will be passed to. {@code playerName}s passed to the callback must be properly capitalized or null
+     * @see PlayerUUIDMapCallback
+     */
+    public void getCorrectedPlayerName(String playerName, PlayerUUIDMapCallback callback) {
+        getPlayerUuid(playerName, callback);
+    }
+
+    /**
      * Gets a player's name and returns it using the supplied PlayerUUIDMapCallback.
-     * Potentially a long-running operation. If so, it be carried out asynchronously.
+     * Potentially a long-running operation. If so, it should be carried out asynchronously.
      *
      * @param uuidString The String representation of the player's {@link UUID}
-     * @return The player's name with correct capitalization or null
+     * @param callback A callback which the results of this method will be passed to. {@code playerName}s passed to the callback must be properly capitalized or null
+     * @see PlayerUUIDMapCallback
      */
     public void getPlayerName(String uuidString, PlayerUUIDMapCallback callback) { getPlayerName(getUuidFromString(uuidString), callback); }
 
     /**
      * Gets a player's name and returns it using the supplied PlayerUUIDMapCallback.
-     * Potentially a long-running operation. If so, it be carried out asynchronously.
+     * Potentially a long-running operation. If so, it should be carried out asynchronously.
      *
      * @param playerUuid The player's UUID
-     * @return The player's name with correct capitalization or null
+     * @param callback A callback which the results of this method will be passed to
+     * @see PlayerUUIDMapCallback
      */
     public abstract void getPlayerName(UUID playerUuid, PlayerUUIDMapCallback callback);
 
     /**
      * This method should fire a {@link PlayerNameChangeDetectedEvent} when a player name change is detected.
-     * This serves as more of a reminder for developers implementing this interface that the plugin should call {@link #firePlayerNameChangeDetectedEvent} when the opportunity presents itself.
-     * It should only be called by the plugin that extends this class, however you may need to write a wrapper method with less restrictive visibility.
+     * This serves as more of a reminder for developers extending this class that their plugin should call {@link #firePlayerNameChangeDetectedEvent} when the opportunity presents itself.
+     * This method should only be called by the plugin that extends this class, however you may need to write a wrapper method with less restrictive visibility depending on your implementation.
      *
      * @param uuid The UUID of the player who changed their name
      * @param originalName The player's original name with correct capitalization
@@ -139,6 +169,7 @@ public abstract class PlayerUUIDMap {
      * Fires a {@link PlayerNameChangeDetectedEvent} which other plugins may listen for.
      * This event should be fired whenever the PlayerUUIDMap has to change a {@code playerName} <-> {@code playerUUID} mapping, NOT when a new mapping is created.
      * In other words, only fire this event whenever you notice a player that has played on this server before has changed their name.
+     * This method should not be called outside of the extending class.
      *
      * @param uuid The UUID of the player who changed their name
      * @param originalName The player's original name with correct capitalization

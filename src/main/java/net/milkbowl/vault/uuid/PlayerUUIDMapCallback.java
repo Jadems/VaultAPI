@@ -12,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public abstract class PlayerUUIDMapCallback {
     /**
      * Convenience method for calling {@link #onCallback(Throwable, String, UUID)} with an option to call it on the main thread. Catches any Throwable resulting from the callback and prints the stack trace.
-     * The originally supplied {@code playerName} or {@code playerUuid} MUST be included in this callback even if the mapping failed or an error occurred.
+     * The {@code playerName} (correctly capitalized) and {@code playerUuid} must both be included in this callback if it succeeds. If it fails in a way that prevents either value from being collected, both values should be null.
      *
      * @param plugin The JavaPlugin running the callback (needed for scheduling on the main thread)
      * @param error A link Throwable if an error occurred, or null
@@ -43,7 +43,8 @@ public abstract class PlayerUUIDMapCallback {
 
     /**
      * A callback to be ran after mapping a {@code playerName} <-> {@code playerUuid}.
-     * The originally supplied {@code playerName} or {@code playerUuid} MUST be included in this callback even if the mapping failed or an error occurred.
+     * Except in the case of looking up a correctly capitalized {@code playerName}, the {@code playerName} (correctly capitalized) and {@code playerUuid} must both be included in this callback if it succeeds.
+     * If this callback fails in a way that prevents either value from being collected, both values should be null.
      *
      * @param error A Throwable if an error occurred, or null
      * @param playerName The player's name with correct capitalization or null if it could not be found or an error occurred
